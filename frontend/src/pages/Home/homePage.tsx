@@ -1,26 +1,58 @@
 import { Link } from 'react-router-dom'
+import { useAuthStatus, useLogout } from '../../api/useAuth'
 
 export default function Home() {
+  const { isAuthenticated, user } = useAuthStatus();
+  const { logout, loading: loggingOut } = useLogout();
+
+  const handleLogout = () => {
+    if (window.confirm('Bạn có chắc muốn đăng xuất?')) {
+      logout();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-indigo-600">Project1 Shop</h1>
-          <nav className="flex gap-4">
-            <Link 
-              to="/login" 
-              className="px-6 py-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
-            >
-              Đăng nhập
-            </Link>
-            <Link 
-              to="/register" 
-              className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-            >
-              Đăng ký
-            </Link>
-          </nav>
+          
+          {isAuthenticated ? (
+            <nav className="flex items-center gap-4">
+              <span className="text-gray-700">
+                Xin chào, <span className="font-semibold text-indigo-600">{user?.username}</span>
+              </span>
+              <Link 
+                to="/profile" 
+                className="px-6 py-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+              >
+                Tài khoản
+              </Link>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium disabled:bg-red-300"
+              >
+                {loggingOut ? 'Đang xuất...' : 'Đăng xuất'}
+              </button>
+            </nav>
+          ) : (
+            <nav className="flex gap-4">
+              <Link 
+                to="/login" 
+                className="px-6 py-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+              >
+                Đăng nhập
+              </Link>
+              <Link 
+                to="/register" 
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+              >
+                Đăng ký
+              </Link>
+            </nav>
+          )}
         </div>
       </header>
 

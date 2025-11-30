@@ -1,6 +1,7 @@
 // src/pages/auth/RegisterPage.tsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useRegister } from "../../api/useAuth";
 
 type RegisterFormValues = {
   username: string;
@@ -23,10 +24,10 @@ export default function RegisterPage() {
     agree: false,
   });
 
-  const [loading, setLoading] = useState(false);
+  const { register, loading, error: registerError } = useRegister();
   const [error, setError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
-  const navigate = useNavigate();
 
   const handleChange =
     (k: keyof RegisterFormValues) =>
@@ -36,7 +37,23 @@ export default function RegisterPage() {
           ? e.currentTarget.checked
           : e.currentTarget.value;
 
-      setValues((s) => ({ ...s, [k]: v }));
+      setValues((s) => {
+        const newValues = { ...s, [k]: v };
+        
+        // Kiểm tra password và confirmPassword có khớp không
+        if (k === "password" || k === "confirmPassword") {
+          const pwd = k === "password" ? v : s.password;
+          const confirmPwd = k === "confirmPassword" ? v : s.confirmPassword;
+          
+          if (confirmPwd && pwd !== confirmPwd) {
+            setPasswordError("Mật khẩu xác nhận không khớp");
+          } else {
+            setPasswordError(null);
+          }
+        }
+        
+        return newValues;
+      });
     };
 
   const submit = async (e: React.FormEvent) => {
@@ -55,40 +72,20 @@ export default function RegisterPage() {
       setError("Vui lòng nhập email");
       return;
     }
-    if (!values.phone.trim()) {
-      setError("Vui lòng nhập số điện thoại");
-      return;
-    }
-    // kiểm tra số điện thoại cơ bản: 9-11 chữ số
-    if (!/^\d{9,11}$/.test(values.phone)) {
-      setError("Số điện thoại không hợp lệ (9-11 chữ số)");
-      return;
-    }
     if (values.password.length < 6) {
       setError("Mật khẩu phải có ít nhất 6 ký tự");
       return;
     }
-    if (values.password !== values.confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp");
-      return;
-    }
-    if (!values.agree) {
-      setError("Bạn cần đồng ý với điều khoản sử dụng");
-      return;
-    }
 
-    try {
-      setLoading(true);
-      setError(null);
+    await register({
+      username: values.username,
+      password: values.password,
+      password_confirm: values.confirmPassword,
+      full_name: values.fullName, // chú ý trường full_name
+      email: values.email,
+      phone_number: values.phone,
+    });
 
-      // TODO: gọi API register ở đây, map field `phone` -> `phone_number` nếu backend yêu cầu
-      // const payload = { username: values.username, full_name: values.fullName, email: values.email, phone_number: values.phone, password: values.password, password_confirm: values.confirmPassword }
-      navigate("/login", { replace: true });
-    } catch (err: any) {
-      setError(err.message || "Đăng ký thất bại");
-    } finally {
-      setLoading(false);
-    }
   };
 
   return (
@@ -98,9 +95,9 @@ export default function RegisterPage() {
           Đăng ký
         </h1>
 
-        {error && (
+        {(error || registerError) && (
           <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
-            {error}
+            {error || registerError}
           </div>
         )}
 
@@ -158,7 +155,6 @@ export default function RegisterPage() {
             <input
               className="w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-4 py-2 text-sm outline-none transition"
               inputMode="numeric"
-              pattern="\\d*"
               value={values.phone}
               onChange={handleChange("phone")}
               name="phone"
@@ -178,8 +174,7 @@ export default function RegisterPage() {
               value={values.password}
               onChange={handleChange("password")}
               name="password"
-              placeholder="Tối thiểu 6 ký tự"
-              autoComplete="new-password"
+              placeholder="Tối thiểu 8 ký tự"
               required
             />
           </div>
@@ -189,20 +184,22 @@ export default function RegisterPage() {
               Xác nhận mật khẩu
             </label>
             <input
-              className="w-full rounded-lg border border-gray-300 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-4 py-2 text-sm outline-none transition"
+              className={`w-full rounded-lg border focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 px-4 py-2 text-sm outline-none transition`}
               type="password"
               value={values.confirmPassword}
               onChange={handleChange("confirmPassword")}
               name="confirmPassword"
               placeholder="Nhập lại mật khẩu"
-              autoComplete="new-password"
               required
             />
+            {passwordError && (
+              <p className="text-xs text-red-600 mt-1">{passwordError}</p>
+            )}
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !!passwordError}
             className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-semibold py-3 rounded-lg shadow-md hover:shadow-lg transition-all"
           >
             {loading ? "Đang xử lý..." : "Tạo tài khoản"}

@@ -79,16 +79,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 import os
+import dj_database_url
 
+DATABASE_URL = 'postgresql://neondb_owner:npg_XKEdoF9A4tyc@ep-sweet-voice-a1efun2h-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'project1_shop_db'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'binhbaoan12'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-    }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': os.getenv('DB_NAME', 'project1_shop_db'),
+    #     'USER': os.getenv('DB_USER', 'postgres'),
+    #     'PASSWORD': os.getenv('DB_PASSWORD', 'binhbaoan12'),
+    #     'HOST': os.getenv('DB_HOST', 'localhost'),
+    #     'PORT': os.getenv('DB_PORT', '5432'),
+    # }
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL", DATABASE_URL),
+        conn_max_age=600,
+        ssl_require=True,  # Neon cần SSL
+    )
+    
 }
 
 

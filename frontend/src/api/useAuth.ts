@@ -55,16 +55,12 @@ export function useRegister() {
 
       const response = await accountsService.register(data);
 
-      // Lưu thông tin vào localStorage
       localStorage.setItem('access_token', response.access);
       localStorage.setItem('refresh_token', response.refresh);
       localStorage.setItem('user', JSON.stringify(response.user));
 
-      // Chuyển về trang chủ
       navigate('/', { replace: true });
     } catch (err: any) {
-      // Xử lý lỗi từ backend RegisterSerializer
-      // Backend có thể trả về object errors như { username: [...], email: [...] }
       const errorData = err.response?.data;
       if (errorData && typeof errorData === 'object') {
         const firstError = Object.values(errorData)[0];
@@ -100,7 +96,6 @@ export function useLogout() {
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
-      // Xóa thông tin khỏi localStorage dù có lỗi hay không
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');

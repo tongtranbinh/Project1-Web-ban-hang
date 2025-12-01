@@ -1,15 +1,30 @@
 import { Link } from 'react-router-dom'
-import { useAuthStatus, useLogout } from '../../api/useAuth'
+import toast from 'react-hot-toast';
+import { useEffect } from 'react';
+import { getUserProfile, useAuthStatus, useLogout } from '../../api/useAuth'
 
 export default function Home() {
   const { isAuthenticated, user } = useAuthStatus();
   const { logout, loading: loggingOut } = useLogout();
+  const { UserProfile, profile, loading: loadingProfile, error: profileError } = getUserProfile();
 
   const handleLogout = () => {
     if (window.confirm('Bạn có chắc muốn đăng xuất?')) {
       logout();
     }
   };
+
+  const loadProfile = async () => {
+    await UserProfile();
+    if (profileError) {
+      toast.error(profileError);
+    }
+  }
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -21,7 +36,7 @@ export default function Home() {
           {isAuthenticated ? (
             <nav className="flex items-center gap-4">
               <span className="text-gray-700">
-                Xin chào, <span className="font-semibold text-indigo-600">{user?.username}</span>
+                Xin chào, <span className="font-semibold text-indigo-600">{profile?.full_name}</span>
               </span>
               <Link 
                 to="/profile" 

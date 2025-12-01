@@ -16,6 +16,11 @@ class UserViewSet(viewsets.ModelViewSet):
 	def get_queryset(self):
 		# Chỉ cho phép user xem thông tin của chính mình
 		return User.objects.filter(id=self.request.user.id)
+	@action(detail=False, methods=['get'])
+	def me(self, request):
+		"""API lấy thông tin user hiện tại"""
+		serializer = self.get_serializer(request.user)
+		return Response(serializer.data)
 
 class ShippingAddressViewSet(viewsets.ModelViewSet):
 	queryset = ShippingAddress.objects.all()

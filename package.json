@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "be": "cd backend && python manage.py runserver",
+    "fe": "cd frontend && npm run dev",
+    "dev": "concurrently \"npm:be\" \"npm:fe\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

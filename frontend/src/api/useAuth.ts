@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { accountsService } from './accountsApiService';
 import type { LoginRequest, RegisterRequest } from './models/User';
 
@@ -23,6 +24,8 @@ export function useLogin() {
       localStorage.setItem('refresh_token', response.refresh);
       localStorage.setItem('user', JSON.stringify(response.user));
 
+      toast.success(`Chào mừng ${response.user.username}!`);
+      
       // Chuyển về trang chủ
       navigate('/', { replace: true });
     } catch (err: any) {
@@ -31,6 +34,7 @@ export function useLogin() {
                           err.response?.data?.detail || 
                           'Đăng nhập thất bại';
       setError(errorMessage);
+      toast.error(errorMessage);
       throw err;
     } finally {
       setLoading(false);
@@ -59,6 +63,8 @@ export function useRegister() {
       localStorage.setItem('refresh_token', response.refresh);
       localStorage.setItem('user', JSON.stringify(response.user));
 
+      toast.success('Đăng ký thành công!');
+      
       navigate('/', { replace: true });
     } catch (err: any) {
       const errorData = err.response?.data;
@@ -66,8 +72,10 @@ export function useRegister() {
         const firstError = Object.values(errorData)[0];
         const errorMessage = Array.isArray(firstError) ? firstError[0] : 'Đăng ký thất bại';
         setError(errorMessage);
+        toast.error(errorMessage);
       } else {
         setError('Đăng ký thất bại');
+        toast.error('Đăng ký thất bại');
       }
       throw err;
     } finally {
@@ -100,6 +108,8 @@ export function useLogout() {
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       
+      toast.success('Đã đăng xuất thành công');
+      
       setLoading(false);
       navigate('/login', { replace: true });
     }
@@ -119,4 +129,27 @@ export function useAuthStatus() {
   const user = userStr ? JSON.parse(userStr) : null;
 
   return { isAuthenticated, user };
+}
+
+export function getUserProfile() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+
+  const UserProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const profileData = await accountsService.getProfile();
+      setProfile(profileData);
+      return profile;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Lấy thông tin thất bại';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }
+  return { UserProfile, profile, loading, error };
 }

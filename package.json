@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "be": "cd backend && python manage.py runserver",
+    "be": "cd backend && venv\\Scripts\\activate && python manage.py runserver",
     "fe": "cd frontend && npm run dev",
     "dev": "concurrently \"npm:be\" \"npm:fe\""
   },

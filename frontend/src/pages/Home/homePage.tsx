@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { getUserProfile, useAuthStatus, useLogout } from '../../api/useAuth'
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuthStatus();
+  const { isAuthenticated } = useAuthStatus();
   const { logout, loading: loggingOut } = useLogout();
   const { UserProfile, profile, loading: loadingProfile, error: profileError } = getUserProfile();
 
@@ -22,8 +22,10 @@ export default function Home() {
   }
 
   useEffect(() => {
-    loadProfile();
-  }, []);
+    if (isAuthenticated) {
+      loadProfile();
+    }
+  }, [isAuthenticated]);
 
 
   return (
@@ -89,9 +91,60 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Quick Access Section */}
+      {isAuthenticated && (
+        <section className="py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+              Truy cập nhanh
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <Link 
+                to="/products" 
+                className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <div className="text-4xl mb-3">🛍️</div>
+                <h3 className="text-xl font-bold mb-2">Sản phẩm</h3>
+                <p className="text-blue-100 text-sm">Khám phá sản phẩm</p>
+              </Link>
+              
+              <Link 
+                to="/cart" 
+                className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <div className="text-4xl mb-3">🛒</div>
+                <h3 className="text-xl font-bold mb-2">Giỏ hàng</h3>
+                <p className="text-green-100 text-sm">Xem giỏ hàng</p>
+              </Link>
+              
+              <Link 
+                to="/orders" 
+                className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <div className="text-4xl mb-3">📦</div>
+                <h3 className="text-xl font-bold mb-2">Đơn hàng</h3>
+                <p className="text-purple-100 text-sm">Theo dõi đơn hàng</p>
+              </Link>
+              
+              <Link 
+                to="/profile" 
+                className="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+              >
+                <div className="text-4xl mb-3">👤</div>
+                <h3 className="text-xl font-bold mb-2">Tài khoản</h3>
+                <p className="text-pink-100 text-sm">Quản lý tài khoản</p>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Features Section */}
       <section className="py-16">
         <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            Tại sao chọn chúng tôi?
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-shadow">
               <h3 className="text-2xl font-bold mb-4 text-gray-800">

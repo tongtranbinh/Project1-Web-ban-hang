@@ -40,9 +40,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
+    # My apps
     'accounts',
     'orders',
     'products',
+    # Cloudinary storage
+    "cloudinary_storage",
+    "cloudinary",
 ]
 
 MIDDLEWARE = [
@@ -75,7 +79,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-# Database
+# Database + Storage
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 import os
@@ -99,7 +103,24 @@ DATABASES = {
     
 }
 
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+# Django 5+ recommended storage configuration
+STORAGES = {
+    'default': {
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
+
+CLOUDINARY_STORAGE = {
+    # Use proper env var names, with safe defaults for local dev
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', 'dk7vma9yr'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY', '419395252892955'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET', 'IAwHqzE8SH_cP3JX7ufT_a8JX_k'),
+}
 
 
 # Password validation
@@ -173,5 +194,24 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'API documentation for Project1 E-commerce',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+    
+    # Tự động group API theo tags
+    'TAGS': [
+        {'name': 'Authentication', 'description': 'APIs liên quan đến đăng nhập, đăng ký, đăng xuất'},
+        {'name': 'Users', 'description': 'Quản lý thông tin user và profile'},
+        {'name': 'Shipping Addresses', 'description': 'Quản lý địa chỉ giao hàng'},
+        {'name': 'Products', 'description': 'Quản lý sản phẩm'},
+        {'name': 'Categories', 'description': 'Quản lý danh mục sản phẩm'},
+        {'name': 'Product Images', 'description': 'Quản lý hình ảnh sản phẩm'},
+        {'name': 'Cart', 'description': 'Quản lý giỏ hàng'},
+        {'name': 'Orders', 'description': 'Quản lý đơn hàng'},
+    ],
+    
+    # Sắp xếp operations theo method
+    'SORT_OPERATIONS': True,
+    
+    # Enum naming
+    'ENUM_NAME_OVERRIDES': {
+        'OrderStatusEnum': 'orders.models.OrderStatus',
+    },
 }
-

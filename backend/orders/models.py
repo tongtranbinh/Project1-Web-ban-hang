@@ -19,7 +19,9 @@ class Cart(models.Model):
 
 
 class CartItem(models.Model):
-    
+        
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    quantity = models.PositiveIntegerField(default=1)
     cart = models.ForeignKey(
         Cart,
         on_delete=models.CASCADE,
@@ -30,9 +32,6 @@ class CartItem(models.Model):
         on_delete=models.CASCADE,
         related_name="cart_items",
     )
-    
-    sid = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
-    quantity = models.PositiveIntegerField(default=1)
 
     class Meta:
         unique_together = ("cart", "product")
@@ -55,6 +54,7 @@ class Order(models.Model):
         on_delete=models.CASCADE,
         related_name="orders",
     )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=20,
@@ -79,6 +79,7 @@ class OrderItem(models.Model):
         on_delete=models.PROTECT,
         related_name="order_items",
     )
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 

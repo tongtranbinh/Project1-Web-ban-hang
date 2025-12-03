@@ -4,3 +4,6 @@ venv\Scripts\activate
 python manage.py runserver
 # migrate
 python manage.py migrate
+# admin
+username: admin
+pass: admin123

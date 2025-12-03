@@ -38,8 +38,7 @@ class ShippingAddress(models.Model):
     full_name = models.CharField(max_length=150)        # tên người nhận
     phone_number = models.CharField(max_length=20)      # sđt người nhận
 
-    line1 = models.CharField(max_length=255)            # địa chỉ chi tiết
-    line2 = models.CharField(max_length=255, blank=True)
+    description = models.CharField(max_length=255)            # địa chỉ chi tiết
     city = models.CharField(max_length=100)
     district = models.CharField(max_length=100, blank=True)
     ward = models.CharField(max_length=100, blank=True)

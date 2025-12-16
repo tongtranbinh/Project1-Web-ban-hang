@@ -6,7 +6,7 @@ from products.models import Product
 
 class Cart(models.Model):
     # 1 user 1 cart
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -20,7 +20,7 @@ class Cart(models.Model):
 
 class CartItem(models.Model):
         
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     quantity = models.PositiveIntegerField(default=1)
     cart = models.ForeignKey(
         Cart,
@@ -54,7 +54,7 @@ class Order(models.Model):
         on_delete=models.CASCADE,
         related_name="orders",
     )
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(
         max_length=20,
@@ -79,7 +79,7 @@ class OrderItem(models.Model):
         on_delete=models.PROTECT,
         related_name="order_items",
     )
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 

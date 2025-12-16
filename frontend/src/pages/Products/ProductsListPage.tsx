@@ -6,7 +6,6 @@ import type { Product } from '../../api/models/Product';
 import { useAuthStatus } from '../../api/useAuth';
 
 export default function ProductsListPage() {
-  const { isAuthenticated} = useAuthStatus()
   const { products, loading, fetchProducts } = useProducts();
   const { categories } = useCategories();
   const { addToCart } = useCart();

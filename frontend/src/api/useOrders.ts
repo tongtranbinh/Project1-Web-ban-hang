@@ -13,6 +13,7 @@ export const useCart = () => {
     setError(null);
     try {
       const data = await ordersService.getMyCart();
+      //console.log('Fetched cart:', data);
       setCart(data);
     } catch (err: any) {
       const message = err.response?.data?.message || 'Không thể tải giỏ hàng';
@@ -22,6 +23,11 @@ export const useCart = () => {
       setLoading(false);
     }
   };
+
+  // Auto fetch cart khi component mount
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
   const addToCart = async (product_id: string, quantity: number) => {
     try {
@@ -90,6 +96,11 @@ export const useOrders = () => {
     }
   };
 
+  // Auto fetch orders khi component mount
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
   const createOrder = async (shipping_address: string) => {
     try {
       const data = await ordersService.createOrderFromCart({ shipping_address });
@@ -104,12 +115,13 @@ export const useOrders = () => {
 
   const cancelOrder = async (id: string) => {
     try {
-      await ordersService.cancelOrder(id);
-      toast.success('Đã hủy đơn hàng');
-      await fetchOrders(); // Refresh list
+      const result = await ordersService.cancelOrder(id);
+      toast.success('Đã xóa đơn hàng thành công');
+      // Xóa đơn hàng khỏi danh sách ngay lập tức
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== id));
       return true;
     } catch (err: any) {
-      const message = err.response?.data?.error || 'Không thể hủy đơn hàng';
+      const message = err.response?.data?.error || 'Không thể xóa đơn hàng';
       toast.error(message);
       return false;
     }

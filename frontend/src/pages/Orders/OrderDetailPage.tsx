@@ -1,10 +1,21 @@
-import { useParams, Link } from 'react-router-dom';
-import { useOrderDetail } from '../../api/useOrders';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useOrderDetail, useOrders } from '../../api/useOrders';
 import type { OrderStatus } from '../../api/models/Order';
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { order, loading, error } = useOrderDetail(id!);
+  const { cancelOrder } = useOrders();
+
+  const handleCancelOrder = async () => {
+    if (window.confirm('Bạn có chắc muốn XÓA đơn hàng này? Hành động này không thể hoàn tác!')) {
+      const success = await cancelOrder(order!.id);
+      if (success) {
+        navigate('/orders');
+      }
+    }
+  };
 
   const formatPrice = (price: string) => {
     return new Intl.NumberFormat('vi-VN', { 
@@ -224,6 +235,22 @@ export default function OrderDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Actions */}
+            {(order.status === 'pending' || order.status === 'processing') && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h2 className="text-xl font-semibold mb-4">Hành động</h2>
+                <button
+                  onClick={handleCancelOrder}
+                  className="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                >
+                  🗑️ Xóa đơn hàng
+                </button>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  Chỉ có thể xóa đơn hàng đang chờ xử lý hoặc đang xử lý
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

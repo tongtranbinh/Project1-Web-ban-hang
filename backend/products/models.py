@@ -2,7 +2,7 @@ import uuid
 from django.db import models
 
 class Category(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
 
@@ -16,7 +16,7 @@ class Category(models.Model):
 
 
 class Product(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -39,7 +39,7 @@ class Product(models.Model):
         return self.name
 
 class ProductImage(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
@@ -51,7 +51,7 @@ class ProductImage(models.Model):
     
 # TODO product review model nếu có thời gian làm sau    
 class ProductReview(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,

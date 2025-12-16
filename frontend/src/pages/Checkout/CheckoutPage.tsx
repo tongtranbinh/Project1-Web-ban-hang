@@ -1,14 +1,48 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../api/useOrders';
 import { useOrders } from '../../api/useOrders';
+import { shippingAddressService } from '../../api/shippingAddressApiService';
+import type { ShippingAddress } from '../../api/models/ShippingAddress';
+import { toast } from 'react-hot-toast';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { cart, loading: cartLoading } = useCart();
   const { createOrder } = useOrders();
-  const [shippingAddress, setShippingAddress] = useState('');
+  const [shippingAddresses, setShippingAddresses] = useState<ShippingAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
+
+  // Fetch shipping addresses khi component mount
+  useEffect(() => {
+    const fetchAddresses = async () => {
+      try {
+        const response = await shippingAddressService.getAll();
+        const addresses = response.data;
+        setShippingAddresses(addresses);
+        
+        // Nếu không có địa chỉ nào, redirect đến trang profile
+        if (addresses.length === 0) {
+          toast.error('Vui lòng thêm địa chỉ giao hàng trước khi đặt hàng');
+          navigate('/profile', { state: { openAddressForm: true } });
+          return;
+        }
+        
+        // Tự động chọn địa chỉ mặc định hoặc địa chỉ đầu tiên
+        const defaultAddress = addresses.find(addr => addr.is_default);
+        setSelectedAddressId(defaultAddress?.id || addresses[0].id);
+      } catch (error: any) {
+        console.error('Error fetching addresses:', error);
+        toast.error('Không thể tải danh sách địa chỉ');
+      } finally {
+        setLoadingAddresses(false);
+      }
+    };
+
+    fetchAddresses();
+  }, [navigate]);
 
   const formatPrice = (price: string) => {
     return new Intl.NumberFormat('vi-VN', { 
@@ -26,12 +60,22 @@ export default function CheckoutPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!shippingAddress.trim()) {
+    if (!selectedAddressId) {
+      toast.error('Vui lòng chọn địa chỉ giao hàng');
       return;
     }
 
+    const selectedAddress = shippingAddresses.find(addr => addr.id === selectedAddressId);
+    if (!selectedAddress) {
+      toast.error('Địa chỉ không hợp lệ');
+      return;
+    }
+
+    // Format địa chỉ đầy đủ
+    const fullAddress = `${selectedAddress.full_name} - ${selectedAddress.phone_number}\n${selectedAddress.description}\n${selectedAddress.ward ? selectedAddress.ward + ', ' : ''}${selectedAddress.district ? selectedAddress.district + ', ' : ''}${selectedAddress.city}`;
+
     setSubmitting(true);
-    const order = await createOrder(shippingAddress);
+    const order = await createOrder(fullAddress);
     setSubmitting(false);
 
     if (order) {
@@ -39,7 +83,7 @@ export default function CheckoutPage() {
     }
   };
 
-  if (cartLoading) {
+  if (cartLoading || loadingAddresses) {
     return (
       <div className="min-h-screen flex justify-center items-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -79,16 +123,48 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-semibold mb-4">Thông tin giao hàng</h2>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Địa chỉ giao hàng <span className="text-red-500">*</span>
+                    Chọn địa chỉ giao hàng <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    value={shippingAddress}
-                    onChange={(e) => setShippingAddress(e.target.value)}
+                  <select
+                    value={selectedAddressId}
+                    onChange={(e) => setSelectedAddressId(e.target.value)}
                     required
-                    rows={4}
-                    placeholder="Nhập địa chỉ chi tiết (số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố)"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-3"
+                  >
+                    <option value="">-- Chọn địa chỉ --</option>
+                    {shippingAddresses.map((address) => (
+                      <option key={address.id} value={address.id}>
+                        {address.full_name} - {address.phone_number} | {address.description}, {address.ward && `${address.ward}, `}{address.district && `${address.district}, `}{address.city}
+                        {address.is_default && ' ⭐ (Mặc định)'}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Preview địa chỉ đã chọn */}
+                  {selectedAddressId && shippingAddresses.find(a => a.id === selectedAddressId) && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-blue-900 mb-2">📍 Địa chỉ giao hàng:</h3>
+                      {(() => {
+                        const addr = shippingAddresses.find(a => a.id === selectedAddressId)!;
+                        return (
+                          <div className="text-sm text-blue-800 space-y-1">
+                            <p><strong>Người nhận:</strong> {addr.full_name}</p>
+                            <p><strong>Số điện thoại:</strong> {addr.phone_number}</p>
+                            <p><strong>Địa chỉ:</strong> {addr.description}</p>
+                            <p>{addr.ward && `${addr.ward}, `}{addr.district && `${addr.district}, `}{addr.city}</p>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/profile')}
+                    className="mt-3 text-blue-600 hover:text-blue-700 text-sm font-medium"
+                  >
+                    + Quản lý địa chỉ giao hàng
+                  </button>
                 </div>
               </div>
 
@@ -154,7 +230,7 @@ export default function CheckoutPage() {
 
                 <button
                   type="submit"
-                  disabled={submitting || !shippingAddress.trim()}
+                  disabled={submitting || !selectedAddressId}
                   className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {submitting ? 'Đang xử lý...' : 'Đặt hàng'}

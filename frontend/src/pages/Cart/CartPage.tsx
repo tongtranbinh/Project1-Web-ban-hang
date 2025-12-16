@@ -7,6 +7,7 @@ export default function CartPage() {
   const { cart, loading, fetchCart , updateCartItem, clearCart } = useCart();
 
   useEffect(() => {
+    //console.log('Cart in CartPage:', cart);
     fetchCart();
   }, []);
 
@@ -18,6 +19,7 @@ export default function CartPage() {
   };
 
   const calculateTotal = () => {
+    console.log(cart);
     if (!cart || !cart.items) return 0;
     return cart.items.reduce((sum, item) => {
       return sum + (parseFloat(item.product.price) * item.quantity);

@@ -40,7 +40,7 @@ export default function OrdersPage() {
   };
 
   const handleCancelOrder = async (orderId: string) => {
-    if (window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) {
+    if (window.confirm('Bạn có chắc muốn XÓA đơn hàng này? Hành động này không thể hoàn tác!')) {
       await cancelOrder(orderId);
     }
   };
@@ -167,7 +167,7 @@ export default function OrdersPage() {
                           onClick={() => handleCancelOrder(order.id)}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
                         >
-                          Hủy đơn
+                          🗑️ Xóa đơn
                         </button>
                       )}
                       <Link

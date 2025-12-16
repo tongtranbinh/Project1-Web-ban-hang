@@ -162,16 +162,18 @@ class OrderViewSet(viewsets.ModelViewSet):
         order_serializer = OrderSerializer(order)
         return Response(order_serializer.data, status=status.HTTP_201_CREATED)
     
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post', 'delete'])
     def cancel(self, request, pk=None):
-        """Hủy đơn hàng"""
+        """Hủy đơn hàng (xóa hoàn toàn khỏi database)"""
         order = self.get_object()
-        if order.status in ['shipped', 'completed', 'cancelled']:
+        if order.status in ['shipped', 'completed']:
             return Response(
-                {'error': 'Không thể hủy đơn hàng này'}, 
+                {'error': 'Không thể hủy đơn hàng đã giao hoặc hoàn thành'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
-        order.status = 'cancelled'
-        order.save()
-        serializer = self.get_serializer(order)
-        return Response(serializer.data)
+        order_id = order.id
+        order.delete()
+        return Response(
+            {'message': f'Đã xóa đơn hàng #{order_id}'}, 
+            status=status.HTTP_200_OK
+        )

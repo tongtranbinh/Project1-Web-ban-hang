@@ -8,6 +8,7 @@ import CartPage from "../pages/Cart/CartPage";
 import CheckoutPage from "../pages/Checkout/CheckoutPage";
 import OrdersPage from "../pages/Orders/OrdersPage";
 import OrderDetailPage from "../pages/Orders/OrderDetailPage";
+import UserProfilePage from "../pages/Profile/UserProfilePage";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function AppRouter() {
@@ -19,6 +20,9 @@ export default function AppRouter() {
         {/* Auth Pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        {/* User Profile - Protected Route */}
+        <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
 
         {/* Products Pages */}
         <Route path="/products" element={<ProductsListPage />} />

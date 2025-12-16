@@ -39,7 +39,7 @@ export const ordersService = {
   },
 
   cancelOrder: async (id: string) => {
-    const response = await http.post<Order>(`/orders/orders/${id}/cancel/`);
+    const response = await http.post<{ message: string }>(`/orders/orders/${id}/cancel/`);
     return response.data;
   },
 };

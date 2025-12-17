@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { accountsService } from './accountsApiService';
-import type { LoginRequest, RegisterRequest } from './models/User';
+import type { LoginRequest, RegisterRequest, UpdateUserInfo, User } from './models/User';
 
 /**
  * Hook xử lý đăng nhập
@@ -153,3 +153,28 @@ export function getUserProfile() {
   }
   return { UserProfile, profile, loading, error };
 }
+
+export function useUpdateUserInfo() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateUserInfo = async (id: string, data: UpdateUserInfo) => {
+    try {
+      setLoading(true);
+      setError(null);
+      // Giả sử có API cập nhật thông tin người dùng
+      const response = await accountsService.updateUser(id, data);
+      toast.success('Cập nhật thông tin thành công!');
+      return response;
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Không thể cập nhật thông tin';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw err;
+    }
+    finally {
+      setLoading(false);
+    }
+    return { updateUserInfo, loading, error };
+  }
+} 

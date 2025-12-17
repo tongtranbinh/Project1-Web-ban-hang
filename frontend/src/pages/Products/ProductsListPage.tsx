@@ -110,10 +110,9 @@ export default function ProductsListPage() {
                 {/* Product Image */}
                 <Link to={`/products/${product.id}`}>
                   <div className="relative h-48 bg-gray-200">
-                    {product.images && product.images.length > 0 ? (
+                    {product.cover_image.image ? (
                       <img
-                        src={product.images[0].image}
-                        alt={product.images[0].alt_text || product.name}
+                        src={product.cover_image.image}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -147,7 +146,7 @@ export default function ProductsListPage() {
                     </span>
                     <button
                       onClick={() => handleAddToCart(product.id)}
-                      disabled={!product.is_active || product.stock_quantity === 0}
+                      disabled={!product.is_active || product.stock === 0}
                       className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
                     >
                       Thêm vào giỏ
@@ -155,7 +154,7 @@ export default function ProductsListPage() {
                   </div>
                   
                   <p className="text-xs text-gray-500 mt-2">
-                    Còn lại: {product.stock_quantity}
+                    Còn lại: {product.stock}
                   </p>
                 </div>
               </div>

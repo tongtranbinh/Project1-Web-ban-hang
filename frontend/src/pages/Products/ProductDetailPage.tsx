@@ -74,6 +74,12 @@ export default function ProductDetailPage() {
                     alt={product.images[selectedImage].alt_text || product.name}
                     className="w-full h-96 object-cover"
                   />
+                ) : product.cover_image ? (
+                  <img
+                    src={product.cover_image.image}
+                    alt={product.name}
+                    className="w-full h-96 object-cover"
+                  />
                 ) : (
                   <div className="flex items-center justify-center h-96 text-gray-400">
                     No Image Available
@@ -125,7 +131,7 @@ export default function ProductDetailPage() {
 
               <div className="mb-6">
                 <span className="text-gray-600">Còn lại: </span>
-                <span className="text-gray-900 font-medium">{product.stock_quantity} sản phẩm</span>
+                <span className="text-gray-900 font-medium">{product.stock} sản phẩm</span>
               </div>
 
               <div className="border-t border-b py-6 mb-6">
@@ -147,8 +153,8 @@ export default function ProductDetailPage() {
                   </button>
                   <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                    disabled={quantity >= product.stock_quantity}
+                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                    disabled={quantity >= product.stock}
                     className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   >
                     +
@@ -160,7 +166,7 @@ export default function ProductDetailPage() {
               <div className="flex gap-4">
                 <button
                   onClick={handleAddToCart}
-                  disabled={!product.is_active || product.stock_quantity === 0}
+                  disabled={!product.is_active || product.stock === 0}
                   className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed font-semibold"
                 >
                   Thêm vào giỏ hàng

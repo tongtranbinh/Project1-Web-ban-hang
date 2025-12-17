@@ -9,8 +9,7 @@ export interface Category {
 export interface ProductImage {
   id: string;
   image: string;
-  alt_text: string;
-  display_order: number;
+  alt_text?: string;
 }
 
 export interface Product {
@@ -19,9 +18,11 @@ export interface Product {
   name: string;
   description: string;
   price: string;
-  stock_quantity: number;
+  stock: number;
+  sold?: number;
   is_active: boolean;
-  images: ProductImage[];
+  cover_image: ProductImage;
+  images: ProductImage[]; // Only available on product detail API
   created_at: string;
 }
 
@@ -37,6 +38,6 @@ export interface CreateProduct {
   name: string;
   description: string;
   price: string;
-  stock_quantity: number;
+  stock: number;
   is_active: boolean;
 }

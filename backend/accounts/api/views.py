@@ -24,10 +24,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
 	def get_queryset(self):
 		# Chỉ cho phép user xem thông tin của chính mình
+		if self.request.user.is_staff:
+			return User.objects.all()
 		return User.objects.filter(id=self.request.user.id)
 	@action(detail=False, methods=['get'])
 	def me(self, request):
-		"""API lấy thông tin user hiện tại"""
 		serializer = self.get_serializer(request.user)
 		return Response(serializer.data)
 
@@ -71,7 +72,6 @@ class ShippingAddressViewSet(viewsets.ModelViewSet):
 	
 	@action(detail=True, methods=['post'])
 	def set_default(self, request, pk=None):
-		"""API đặt địa chỉ này làm mặc định"""
 		address = self.get_object()
 		# Bỏ default của các địa chỉ khác
 		ShippingAddress.objects.filter(

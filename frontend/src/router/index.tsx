@@ -9,7 +9,13 @@ import CheckoutPage from "../pages/Checkout/CheckoutPage";
 import OrdersPage from "../pages/Orders/OrdersPage";
 import OrderDetailPage from "../pages/Orders/OrderDetailPage";
 import UserProfilePage from "../pages/Profile/UserProfilePage";
+import AdminHomePage from "../pages/Admin/AdminHomePage";
+import AdminDashboardPage from "../pages/Admin/AdminDashboardPage";
+import AdminProductsPage from "../pages/Admin/AdminProductsPage";
+import AdminOrdersPage from "../pages/Admin/AdminOrdersPage";
+import AdminUsersPage from "../pages/Admin/AdminUsersPage";
 import ProtectedRoute from "../components/ProtectedRoute";
+import AdminRoute from "../components/AdminRoute";
 
 export default function AppRouter() {
   return (
@@ -20,6 +26,13 @@ export default function AppRouter() {
         {/* Auth Pages */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+
+        {/* Admin Routes - Only for admins */}
+        <Route path="/admin" element={<AdminRoute><AdminHomePage /></AdminRoute>} />
+        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+        <Route path="/admin/products" element={<AdminRoute><AdminProductsPage /></AdminRoute>} />
+        <Route path="/admin/orders" element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
 
         {/* User Profile - Protected Route */}
         <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />

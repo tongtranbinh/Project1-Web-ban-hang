@@ -1,5 +1,5 @@
 import http from './http';
-import type { Cart, Order, AddToCartRequest, UpdateCartItemRequest, CreateOrderRequest } from './models/Order';
+import type { Cart, Order, AddToCartRequest, UpdateCartItemRequest, CreateOrderRequest, OrderStatus } from './models/Order';
 
 export const ordersService = {
   // Cart
@@ -28,6 +28,12 @@ export const ordersService = {
     return response.data;
   },
 
+  // Admin: lấy tất cả đơn (staff sẽ nhận toàn bộ)
+  getAllOrders: async () => {
+    const response = await http.get<Order[]>('/orders/orders/');
+    return response.data;
+  },
+
   getOrderById: async (id: string) => {
     const response = await http.get<Order>(`/orders/orders/${id}/`);
     return response.data;
@@ -35,6 +41,12 @@ export const ordersService = {
 
   createOrderFromCart: async (data: CreateOrderRequest) => {
     const response = await http.post<Order>('/orders/orders/create_from_cart/', data);
+    return response.data;
+  },
+
+  // Admin: cập nhật trạng thái đơn
+  updateOrderStatus: async (id: string, status: OrderStatus) => {
+    const response = await http.patch<Order>(`/orders/orders/${id}/`, { status });
     return response.data;
   },
 

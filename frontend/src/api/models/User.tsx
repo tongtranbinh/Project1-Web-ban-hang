@@ -10,6 +10,13 @@ export interface User {
   is_superuser: boolean;
 }
 
+export interface UpdateUserInfo {
+  full_name?: string;
+  phone_number?: string;
+  email?: string;
+  password?: string;
+}
+
 export interface LoginRequest {
   username: string;
   password: string;

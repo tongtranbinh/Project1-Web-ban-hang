@@ -14,14 +14,10 @@ export const useProducts = () => {
     setError(null);
     try {
       console.log('Fetching products with params:', params);
+      // Gọi 1 lần API - đã bao gồm cover_image từ backend
       const data = await productsService.searchProducts(params);
       setProducts(data);
-        
-      for (const product of data) {
-        const images = await productsService.getProductImages(product.id);
-        //console.log('Fetched images for product', images);
-        product.images = images;
-      }
+      console.log('Fetched products:', data);
     } catch (err: any) {
       const message = err.response?.data?.message || 'Không thể tải danh sách sản phẩm';
       setError(message);

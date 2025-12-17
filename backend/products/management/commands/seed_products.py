@@ -1,3 +1,5 @@
+import random
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from products.models import Category, Product, ProductImage
@@ -21,7 +23,12 @@ SAMPLE_PRODUCTS = [
         "price": 28990000,
         "stock": 20,
         "category": "Điện thoại",
-        "images": ["https://picsum.photos/seed/iphone15/800/600"],
+        "images": [
+            "https://picsum.photos/seed/iphone15/800/600",
+            "https://picsum.photos/seed/iphone15-2/800/600",
+            "https://picsum.photos/seed/iphone15-3/800/600",
+            "https://picsum.photos/seed/iphone15-4/800/600",
+        ],
     },
     {
         "name": "Samsung Galaxy S24",
@@ -29,7 +36,11 @@ SAMPLE_PRODUCTS = [
         "price": 21990000,
         "stock": 30,
         "category": "Điện thoại",
-        "images": ["https://picsum.photos/seed/galaxys24/800/600"],
+        "images": [
+            "https://picsum.photos/seed/galaxys24/800/600",
+            "https://picsum.photos/seed/galaxys24-2/800/600",
+            "https://picsum.photos/seed/galaxys24-3/800/600",
+        ],
     },
     {
         "name": "Xiaomi 14",
@@ -53,7 +64,13 @@ SAMPLE_PRODUCTS = [
         "price": 27990000,
         "stock": 15,
         "category": "Laptop",
-        "images": ["https://picsum.photos/seed/mba13m2/800/600"],
+        "images": [
+            "https://picsum.photos/seed/mba13m2/800/600",
+            "https://picsum.photos/seed/mba13m2-2/800/600",
+            "https://picsum.photos/seed/mba13m2-3/800/600",
+            "https://picsum.photos/seed/mba13m2-4/800/600",
+            "https://picsum.photos/seed/mba13m2-5/800/600",
+        ],
     },
     {
         "name": "Dell XPS 13",
@@ -61,7 +78,11 @@ SAMPLE_PRODUCTS = [
         "price": 32990000,
         "stock": 10,
         "category": "Laptop",
-        "images": ["https://picsum.photos/seed/dellxps13/800/600"],
+        "images": [
+            "https://picsum.photos/seed/dellxps13/800/600",
+            "https://picsum.photos/seed/dellxps13-2/800/600",
+            "https://picsum.photos/seed/dellxps13-3/800/600",
+        ],
     },
     {
         "name": "Asus ROG Zephyrus G14",
@@ -69,7 +90,11 @@ SAMPLE_PRODUCTS = [
         "price": 38990000,
         "stock": 12,
         "category": "Laptop",
-        "images": ["https://picsum.photos/seed/rog14/800/600"],
+        "images": [
+            "https://picsum.photos/seed/rog14/800/600",
+            "https://picsum.photos/seed/rog14-2/800/600",
+            "https://picsum.photos/seed/rog14-3/800/600",
+        ],
     },
     {
         "name": "Lenovo ThinkPad X1 Carbon Gen11",
@@ -109,7 +134,12 @@ SAMPLE_PRODUCTS = [
         "price": 25990000,
         "stock": 20,
         "category": "Tablet",
-        "images": ["https://picsum.photos/seed/ipadpro11m4/800/600"],
+        "images": [
+            "https://picsum.photos/seed/ipadpro11m4/800/600",
+            "https://picsum.photos/seed/ipadpro11m4-2/800/600",
+            "https://picsum.photos/seed/ipadpro11m4-3/800/600",
+            "https://picsum.photos/seed/ipadpro11m4-4/800/600",
+        ],
     },
     {
         "name": "Apple Watch Series 9",
@@ -141,7 +171,11 @@ SAMPLE_PRODUCTS = [
         "price": 7990000,
         "stock": 25,
         "category": "Tai nghe",
-        "images": ["https://picsum.photos/seed/xm5/800/600"],
+        "images": [
+            "https://picsum.photos/seed/xm5/800/600",
+            "https://picsum.photos/seed/xm5-2/800/600",
+            "https://picsum.photos/seed/xm5-3/800/600",
+        ],
     },
     {
         "name": "JBL Charge 5",
@@ -149,7 +183,10 @@ SAMPLE_PRODUCTS = [
         "price": 3990000,
         "stock": 40,
         "category": "Loa",
-        "images": ["https://picsum.photos/seed/charge5/800/600"],
+        "images": [
+            "https://picsum.photos/seed/charge5/800/600",
+            "https://picsum.photos/seed/charge5-2/800/600",
+        ],
     },
     {
         "name": "Sony SRS-XB33",
@@ -203,6 +240,7 @@ class Command(BaseCommand):
                     "description": p.get("description", ""),
                     "price": p["price"],
                     "stock": p["stock"],
+                    "sold": random.randint(0, max(5, int(p["stock"] * 1.5))),
                     "is_active": True,
                     "category": category,
                 },

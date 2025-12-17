@@ -42,4 +42,56 @@ export const accountsService = {
     });
     return response.data;
   },
+
+  /**
+   * Lấy danh sách tất cả người dùng (admin only)
+   */
+  getAllUsers: async (): Promise<User[]> => {
+    const response = await http.get<User[]>('/accounts/users/');
+    return response.data;
+  },
+
+  /**
+   * Lấy chi tiết người dùng theo ID (admin only)
+   */
+  getUserById: async (id: string): Promise<User> => {
+    const response = await http.get<User>(`/accounts/users/${id}/`);
+    return response.data;
+  },
+
+  /**
+   * Cập nhật người dùng (admin only)
+   */
+  updateUser: async (
+    id: string,
+    data: Partial<{
+      username: string;
+      email: string;
+      phone_number: string;
+      full_name: string;
+      first_name: string;
+      last_name: string;
+      is_staff: boolean;
+      is_superuser: boolean;
+    }>
+  ): Promise<User> => {
+    const response = await http.patch<User>(`/accounts/users/${id}/`, data);
+    return response.data;
+  },
+
+  /**
+   * Xóa người dùng (admin only)
+   */
+  deleteUser: async (id: string): Promise<void> => {
+    await http.delete(`/accounts/users/${id}/`);
+  },
+
+  /**
+   * Đặt lại mật khẩu cho người dùng (admin only)
+   */
+  resetUserPassword: async (id: string, newPassword: string): Promise<void> => {
+    await http.post(`/accounts/users/${id}/set_password/`, {
+      password: newPassword,
+    });
+  },
 };

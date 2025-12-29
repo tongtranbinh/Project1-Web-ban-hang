@@ -4,8 +4,23 @@ import type { Product, Category, CreateProduct } from './models/Product';
 
 export const productsService = {
   // Products
-  getAllProducts: async (params?: { category?: string; search?: string }) => {
-    const response = await http.get<Product[]>('/products/products/', { params });
+  getAllProducts: async (params?: { category_id?: string; search?: string; min_price?: number; max_price?: number }) => {
+    const qs = new URLSearchParams();
+    if (params) {
+      if (params.category_id) {
+        qs.append('category_id', params.category_id);
+      }
+      if (params.search) {
+        qs.append('search', params.search);
+      }
+      if (params.min_price !== undefined) {
+        qs.append('min_price', params.min_price.toString());
+      }
+      if (params.max_price !== undefined) {
+        qs.append('max_price', params.max_price.toString());
+      }
+    }
+    const response = await http.get<Product[]>('/products/products/' + (qs.toString() ? `?${qs.toString()}` : ''));
     return response.data;
   },
 
@@ -26,15 +41,6 @@ export const productsService = {
 
   deleteProduct: async (id: string) => {
     await http.delete(`/products/products/${id}/`);
-  },
-  searchProducts: async (params?: { search?: string; category?: string }) => {
-    const response = await http.get<Product[]>('/products/products/search/', {
-      params: {
-        q : params?.search,
-        category_id: params?.category
-      },
-    });
-    return response.data;
   },
 
   // Categories

@@ -22,7 +22,7 @@ class CartSerializer(serializers.ModelSerializer):
         fields = ['id', 'user', 'items', 'total_items', 'created_at']
         read_only_fields = ['id', 'user', 'created_at']
     
-    def get_total_items(self, obj):
+    def get_total_items(self, obj) -> int:
         return obj.items.count()
 
 
@@ -36,8 +36,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
         fields = ['id', 'product', 'product_id', 'quantity', 'unit_price', 'subtotal']
         read_only_fields = ['id']
     
-    def get_subtotal(self, obj):
-        return obj.quantity * obj.unit_price
+    def get_subtotal(self, obj) -> float:
+        return float(obj.quantity * obj.unit_price)
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -66,3 +66,13 @@ class CreateOrderSerializer(serializers.Serializer):
         except Cart.DoesNotExist:
             raise serializers.ValidationError("Không tìm thấy giỏ hàng")
         return data
+
+
+class DashboardSerializer(serializers.Serializer):
+    """Serializer for Dashboard statistics response"""
+    overview = serializers.DictField()
+    revenue_by_time = serializers.ListField()
+    revenue_by_category = serializers.ListField()
+    top_products = serializers.ListField()
+    order_status = serializers.ListField()
+    low_stock_products = serializers.ListField()

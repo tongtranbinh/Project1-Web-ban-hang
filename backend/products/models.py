@@ -19,7 +19,7 @@ class Product(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    price = models.DecimalField(max_digits=14, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     sold = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)

@@ -201,6 +201,7 @@ SPECTACULAR_SETTINGS = {
         {'name': 'Product Images', 'description': 'Quản lý hình ảnh sản phẩm'},
         {'name': 'Cart', 'description': 'Quản lý giỏ hàng'},
         {'name': 'Orders', 'description': 'Quản lý đơn hàng'},
+        {'name': 'Dashboard', 'description': 'Thống kê và báo cáo dành cho admin'},
     ],
     
     # Sắp xếp operations theo method
@@ -208,6 +209,6 @@ SPECTACULAR_SETTINGS = {
     
     # Enum naming
     'ENUM_NAME_OVERRIDES': {
-        'OrderStatusEnum': 'orders.models.OrderStatus',
+        'OrderStatusEnum': 'orders.models.Order.status',
     },
 }

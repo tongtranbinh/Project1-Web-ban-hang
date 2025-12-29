@@ -1,178 +1,142 @@
 import { Link } from 'react-router-dom'
-import toast from 'react-hot-toast';
-import { useEffect } from 'react';
-import { getUserProfile, useAuthStatus, useLogout } from '../../api/useAuth'
+import { useState } from 'react';
+import Layout from '../../components/Layout';
+import HeroSlider from '../../components/HeroSlider';
+import { useCategories } from '../../api/useProducts';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import './homePage.css';
 
 export default function Home() {
-  const { isAuthenticated } = useAuthStatus();
-  const { logout, loading: loggingOut } = useLogout();
-  const { UserProfile, profile, loading: loadingProfile, error: profileError } = getUserProfile();
+  const { categories, loading } = useCategories();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  // Lấy tối đa 8 categories để có thể scroll 2 lần (4 categories mỗi lần)
+  const displayCategories = categories.slice(0, 8);
+  const itemsPerSlide = 4;
+  const totalSlides = Math.ceil(displayCategories.length / itemsPerSlide);
 
-  const handleLogout = () => {
-    if (window.confirm('Bạn có chắc muốn đăng xuất?')) {
-      logout();
-    }
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
   };
 
-  const loadProfile = async () => {
-    await UserProfile();
-    if (profileError) {
-      toast.error(profileError);
-    }
-  }
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadProfile();
-    }
-  }, [isAuthenticated]);
+  const getCurrentCategories = () => {
+    const start = currentSlide * itemsPerSlide;
+    return displayCategories.slice(start, start + itemsPerSlide);
+  };
 
+  // Mapping cho các category với ảnh
+  const getCategoryImage = (name: string) => {
+    const lowerName = name.toLowerCase();
+    // Sử dụng nguồn ảnh công khai (Picsum) để tránh vấn đề bản quyền
+    if (lowerName.includes('laptop')) return 'https://picsum.photos/seed/laptops/800/500';
+    if (lowerName.includes('pc') || lowerName.includes('máy tính')) return 'https://picsum.photos/seed/pc/800/500';
+    if (lowerName.includes('điện thoại') || lowerName.includes('phone') || lowerName.includes('smartphone')) return 'https://picsum.photos/seed/smartphones/800/500';
+    if (lowerName.includes('phụ kiện') || lowerName.includes('accessory')) return 'https://picsum.photos/seed/accessories/800/500';
+    if (lowerName.includes('tablet') || lowerName.includes('ipad')) return 'https://picsum.photos/seed/tablet/800/500';
+    if (lowerName.includes('watch') || lowerName.includes('đồng hồ')) return 'https://picsum.photos/seed/watch/800/500';
+    if (lowerName.includes('tai nghe') || lowerName.includes('headphone') || lowerName.includes('audio')) return 'https://picsum.photos/seed/audio/800/500';
+    if (lowerName.includes('chuột') || lowerName.includes('mouse')) return 'https://picsum.photos/seed/mouse/800/500';
+    return 'https://picsum.photos/seed/default-category/800/500';
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-indigo-600">Project1 Shop</h1>
-          
-          {isAuthenticated ? (
-            <nav className="flex items-center gap-4">
-              <span className="text-gray-700">
-                Xin chào, <span className="font-semibold text-indigo-600">{profile?.full_name}</span>
-              </span>
-              <Link 
-                to="/profile" 
-                className="px-6 py-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
-              >
-                Tài khoản
-              </Link>
-              <button
-                onClick={handleLogout}
-                disabled={loggingOut}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium disabled:bg-red-300"
-              >
-                {loggingOut ? 'Đang xuất...' : 'Đăng xuất'}
-              </button>
-            </nav>
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Slider */}
+        <div className="max-w-7xl mx-auto px-4 pt-8">
+          <HeroSlider />
+        </div>
+
+        {/* Categories Slider */}
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Danh Mục Sản Phẩm</h2>
+            <p className="text-gray-600 mt-1">Khám phá các danh mục hàng đầu</p>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+                  <div className="w-full h-40 bg-gray-200 rounded-lg mx-auto mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                </div>
+              ))}
+            </div>
           ) : (
-            <nav className="flex gap-4">
-              <Link 
-                to="/login" 
-                className="px-6 py-2 text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
-              >
-                Đăng nhập
-              </Link>
-              <Link 
-                to="/register" 
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
-              >
-                Đăng ký
-              </Link>
-            </nav>
+            <div className="relative">
+              {/* Navigation Buttons */}
+              {totalSlides > 1 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition"
+                    aria-label="Previous"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-gray-700" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white rounded-full p-2 shadow-lg hover:bg-gray-100 transition"
+                    aria-label="Next"
+                  >
+                    <ChevronRight className="w-6 h-6 text-gray-700" />
+                  </button>
+                </>
+              )}
+
+              {/* Categories Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {getCurrentCategories().map((category, index) => (
+                  <Link
+                    key={category.id}
+                    to={`/products?category=${category.id}`}  
+                    className="category-card-container"
+                  >
+                    <div className={`category-card category-card-${index % 4}`}>
+                      <div className="category-image">
+                        <img 
+                          src={getCategoryImage(category.name)} 
+                          alt={category.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"%3E%3Crect fill="%23f0f0f0" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" font-size="24" fill="%23999" text-anchor="middle" dominant-baseline="middle"%3E📦%3C/text%3E%3C/svg%3E';
+                          }}
+                        />
+                      </div>
+                      <div className="category-overlay">
+                        <h3 className="category-title">{category.name}</h3>
+                        <p className="category-link">Shop Now →</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Dots Indicator */}
+              {totalSlides > 1 && (
+                <div className="flex justify-center gap-2 mt-6">
+                  {Array.from({ length: totalSlides }).map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentSlide(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentSlide ? 'bg-blue-600 w-8' : 'bg-gray-300'
+                      }`}
+                      aria-label={`Go to slide ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
-      </header>
-
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-5xl font-bold mb-6">
-            Chào mừng đến với cửa hàng của chúng tôi
-          </h2>
-          <p className="text-xl mb-8 text-indigo-100">
-            Khám phá hàng ngàn sản phẩm chất lượng với giá tốt nhất
-          </p>
-          <Link 
-            to="/products" 
-            className="inline-block px-8 py-4 bg-white text-indigo-600 rounded-lg font-semibold hover:bg-indigo-50 transition-all transform hover:scale-105 shadow-lg"
-          >
-            Xem sản phẩm
-          </Link>
-        </div>
-      </section>
-
-      {/* Quick Access Section */}
-      {isAuthenticated && (
-        <section className="py-12 bg-white">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-              Truy cập nhanh
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Link 
-                to="/products" 
-                className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                <div className="text-4xl mb-3">🛍️</div>
-                <h3 className="text-xl font-bold mb-2">Sản phẩm</h3>
-                <p className="text-blue-100 text-sm">Khám phá sản phẩm</p>
-              </Link>
-              
-              <Link 
-                to="/cart" 
-                className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                <div className="text-4xl mb-3">🛒</div>
-                <h3 className="text-xl font-bold mb-2">Giỏ hàng</h3>
-                <p className="text-green-100 text-sm">Xem giỏ hàng</p>
-              </Link>
-              
-              <Link 
-                to="/orders" 
-                className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                <div className="text-4xl mb-3">📦</div>
-                <h3 className="text-xl font-bold mb-2">Đơn hàng</h3>
-                <p className="text-purple-100 text-sm">Theo dõi đơn hàng</p>
-              </Link>
-              
-              <Link 
-                to="/profile" 
-                className="bg-gradient-to-br from-pink-500 to-pink-600 text-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                <div className="text-4xl mb-3">👤</div>
-                <h3 className="text-xl font-bold mb-2">Tài khoản</h3>
-                <p className="text-pink-100 text-sm">Quản lý tài khoản</p>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Features Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-            Tại sao chọn chúng tôi?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-shadow">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                🚚 Giao hàng nhanh
-              </h3>
-              <p className="text-gray-600">
-                Miễn phí vận chuyển cho đơn hàng trên 500k
-              </p>
-            </div>
-            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-shadow">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                🔒 Thanh toán an toàn
-              </h3>
-              <p className="text-gray-600">
-                Bảo mật thông tin 100%
-              </p>
-            </div>
-            <div className="bg-white p-8 rounded-xl shadow-md hover:shadow-xl transition-shadow">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                🎁 Ưu đãi hấp dẫn
-              </h3>
-              <p className="text-gray-600">
-                Khuyến mãi liên tục mỗi tuần
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+      </div>
+    </Layout>
   )
 }

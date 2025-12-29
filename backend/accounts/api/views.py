@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample
 from accounts.models import User, ShippingAddress
-from .serializers import UserSerializer, ShippingAddressSerializer, RegisterSerializer, LoginSerializer
+from .serializers import UserSerializer, ShippingAddressSerializer, RegisterSerializer, LoginSerializer, LogoutSerializer
 
 @extend_schema_view(
 	list=extend_schema(tags=['Users']),
@@ -131,7 +131,7 @@ class LogoutView(APIView):
 	permission_classes = [permissions.IsAuthenticated]
 
 	@extend_schema(
-		request={'type': 'object', 'properties': {'refresh': {'type': 'string'}}},
+		request=LogoutSerializer,
 		responses={200: {'type': 'object', 'properties': {'detail': {'type': 'string'}}}}
 	)
 	def post(self, request):

@@ -90,10 +90,12 @@ export function useRegister() {
  * Hook xử lý đăng xuất
  */
 export function useLogout() {
+  
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const logout = async () => {
+    
     try {
       setLoading(true);
       const refreshToken = localStorage.getItem('refresh_token');

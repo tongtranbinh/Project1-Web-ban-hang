@@ -28,7 +28,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at']
 
-    def get_cover_image(self, obj):
+    def get_cover_image(self, obj) -> dict:
         """Lấy ảnh đầu tiên của sản phẩm"""
         first_image = obj.images.first()
         if first_image:

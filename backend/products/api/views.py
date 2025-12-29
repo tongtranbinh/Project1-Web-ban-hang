@@ -14,6 +14,7 @@ class IsStaffOrReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
         return request.user and request.user.is_staff
+    
 @extend_schema_view(
     list=extend_schema(tags=['Products']),
     retrieve=extend_schema(tags=['Products']),
@@ -29,6 +30,29 @@ class ProductViewSet(viewsets.ModelViewSet):
     serializer_class = ProductSerializer
     permission_classes = [IsStaffOrReadOnly]
 
+    def get_queryset(self):
+        """Cho phép lọc sản phẩm theo category và is_active qua query params"""
+        queryset = Product.objects.all()
+        search_query = self.request.query_params.get('search')
+        category_id = self.request.query_params.get('category_id')
+        min_price = self.request.query_params.get('min_price')
+        max_price = self.request.query_params.get('max_price')
+        is_active = self.request.query_params.get('is_active')
+        if category_id is not None:
+            queryset = queryset.filter(category_id=category_id)
+        if is_active is not None:
+            if is_active.lower() in ['true', '1']:
+                queryset = queryset.filter(is_active=True)
+            elif is_active.lower() in ['false', '0']:
+                queryset = queryset.filter(is_active=False)
+        if min_price is not None:
+            queryset = queryset.filter(price__gte=min_price)
+        if max_price is not None:   
+            queryset = queryset.filter(price__lte=max_price)
+        if search_query:
+            queryset = queryset.filter(name__icontains=search_query)
+        return queryset
+
     def get_serializer_class(self):
         """Dùng ProductListSerializer cho list, ProductSerializer cho detail"""
         if self.action == 'list' or self.action == 'search':
@@ -40,22 +64,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         images = ProductImage.objects.filter(product_id=pk)
         serializer = ProductImageSerializer(images, many=True)
         return Response(serializer.data)
-    @action(detail=False, methods=['get'])
-    def search(self, request):
-        q = (request.query_params.get('q') or '').strip()
-        category_id = (request.query_params.get('category_id') or '').strip()
-
-        qs = Product.objects.filter(is_active=True)
-
-        if q:
-            qs = qs.filter(name__icontains=q)
-
-        if category_id:
-            qs = qs.filter(category_id=category_id)
-
-        serializer = self.get_serializer(qs, many=True)
-        return Response(serializer.data)
-
+    
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAdminUser])
     def low_stock(self, request):
         threshold = int(request.query_params.get('threshold', 5))

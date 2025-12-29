@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
-import { dashboardService, type DashboardData } from '../../api/dashboardApiService';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler, type ChartData, type ChartOptions } from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import toast from 'react-hot-toast';
+import { dashboardService, type DashboardData } from '../../api/dashboardApiService';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend, Filler);
 
 export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -36,8 +40,8 @@ export default function AdminDashboardPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN');
+  const formatDate = (dateString: string, options?: Intl.DateTimeFormatOptions) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', options);
   };
 
   const getStatusLabel = (status: string) => {
@@ -80,6 +84,76 @@ export default function AdminDashboardPage() {
       cancelled: 'bg-red-100 text-red-800',
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const revenueChartData: ChartData<'line'> = {
+    labels: data.revenue_by_time.map((item) =>
+      formatDate(
+        item.date,
+        groupBy === 'month'
+          ? { month: 'short', year: 'numeric' }
+          : undefined,
+      ),
+    ),
+    datasets: [
+      {
+        label: 'Doanh thu',
+        data: data.revenue_by_time.map((item) => item.revenue),
+        borderColor: '#4f46e5',
+        backgroundColor: 'rgba(79, 70, 229, 0.12)',
+        tension: 0.35,
+        fill: true,
+        pointRadius: 3,
+      },
+      {
+        label: 'Số đơn',
+        data: data.revenue_by_time.map((item) => item.orders),
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.12)',
+        tension: 0.35,
+        yAxisID: 'y1',
+        fill: false,
+        pointRadius: 3,
+      },
+    ],
+  };
+
+  const revenueChartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = typeof context.parsed.y === 'number' ? context.parsed.y : Number(context.parsed.y);
+            if (context.dataset.label === 'Doanh thu') {
+              return `${context.dataset.label}: ${formatCurrency(value)}`;
+            }
+            return `${context.dataset.label}: ${value}`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Doanh thu' },
+        ticks: {
+          callback: (value: string | number) => formatCurrency(Number(value)),
+        },
+      },
+      y1: {
+        beginAtZero: true,
+        position: 'right',
+        grid: { drawOnChartArea: false },
+        title: { display: true, text: 'Số đơn' },
+        ticks: {
+          precision: 0,
+        },
+      },
+    },
   };
 
   return (
@@ -131,26 +205,40 @@ export default function AdminDashboardPage() {
 
         {/* Revenue by Time */}
         <div className="bg-white rounded-xl shadow p-6 mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Doanh Thu Theo Thời Gian</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Ngày</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Doanh Thu</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Số Đơn</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {data.revenue_by_time.slice(-10).reverse().map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-900">{formatDate(item.date)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{formatCurrency(item.revenue)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">{item.orders}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between mb-2">
+            <h2 className="text-xl font-bold text-gray-900">Doanh Thu Theo Thời Gian</h2>
+            <p className="text-sm text-gray-500">Biểu đồ (trái) + 10 bản ghi gần nhất (phải)</p>
+          </div>
+          <div className="grid gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-3 min-h-[320px]">
+              {data.revenue_by_time.length ? (
+                <Line data={revenueChartData} options={revenueChartOptions} />
+              ) : (
+                <p className="text-sm text-gray-500">Chưa có dữ liệu doanh thu.</p>
+              )}
+            </div>
+            <div className="lg:col-span-2">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Ngày</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Doanh Thu</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Số Đơn</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {data.revenue_by_time.slice(-10).reverse().map((item, index) => (
+                      <tr key={index} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 text-sm text-gray-900">{formatDate(item.date)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{formatCurrency(item.revenue)}</td>
+                        <td className="px-4 py-3 text-sm text-gray-900">{item.orders}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -9,15 +9,14 @@ export const useProducts = () => {
   const [error, setError] = useState<string | null>(null);
   
 
-  const fetchProducts = async (params?: { category?: string; search?: string }) => {
+  const fetchProducts = async (params?: { category_id?: string; search?: string; min_price?: number; max_price?: number }) => {
     setLoading(true);
     setError(null);
     try {
       console.log('Fetching products with params:', params);
       // Gọi 1 lần API - đã bao gồm cover_image từ backend
-      const data = await productsService.searchProducts(params);
+      const data = await productsService.getAllProducts(params);
       setProducts(data);
-      console.log('Fetched products:', data);
     } catch (err: any) {
       const message = err.response?.data?.message || 'Không thể tải danh sách sản phẩm';
       setError(message);

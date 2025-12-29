@@ -12,7 +12,7 @@ from orders.models import Cart, CartItem, Order, OrderItem
 from products.models import Product
 from .serializers import (
     CartSerializer, CartItemSerializer, 
-    OrderSerializer, OrderItemSerializer, CreateOrderSerializer
+    OrderSerializer, OrderItemSerializer, CreateOrderSerializer, DashboardSerializer
 )
 
 
@@ -202,10 +202,15 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
 
 
+@extend_schema(tags=['Dashboard'])
 class DashboardView(APIView):
     """API dashboard cho admin - trả về dữ liệu thống kê"""
     permission_classes = [permissions.IsAdminUser]
+    serializer_class = None
 
+    @extend_schema(
+        responses={200: 'orders.api.serializers.DashboardSerializer'}
+    )
     def get(self, request):
         # Query params cho filter tùy chỉnh
         days = int(request.query_params.get('days', 30))

@@ -126,16 +126,10 @@ export default function OrderDetailPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
-                Đơn hàng #{order.order_number}
+                Đơn hàng #{order.id}
               </h1>
               <p className="text-gray-600 mt-1">Đặt ngày: {formatDate(order.created_at)}</p>
             </div>
-            <Link 
-              to="/orders" 
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-            >
-              ← Danh sách đơn hàng
-            </Link>
           </div>
         </div>
       </div>

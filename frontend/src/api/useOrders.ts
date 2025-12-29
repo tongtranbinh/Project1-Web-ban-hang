@@ -13,12 +13,11 @@ export const useCart = () => {
     setError(null);
     try {
       const data = await ordersService.getMyCart();
-      //console.log('Fetched cart:', data);
       setCart(data);
+      localStorage.setItem('cart_number', data.items.length.toString());
     } catch (err: any) {
       const message = err.response?.data?.message || 'Không thể tải giỏ hàng';
       setError(message);
-      toast.error(message);
     } finally {
       setLoading(false);
     }

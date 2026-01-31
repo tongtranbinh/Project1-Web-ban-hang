@@ -21,8 +21,8 @@ export const accountsService = {
   /**
    * Đăng xuất (blacklist refresh token)
    */
-  logout: async (refreshToken: string): Promise<void> => {
-    await http.post('/accounts/logout/', { refresh: refreshToken });
+  logout: async (): Promise<void> => {
+    await http.post('/accounts/logout/');
   },
 
   /**
@@ -36,10 +36,8 @@ export const accountsService = {
   /**
    * Refresh access token
    */
-  refreshToken: async (refreshToken: string): Promise<{ access: string }> => {
-    const response = await http.post<{ access: string }>('/accounts/token/refresh/', {
-      refresh: refreshToken,
-    });
+  refreshToken: async (): Promise<{ access: string }> => {
+    const response = await http.post<{ access: string }>('/accounts/token/refresh/');
     return response.data;
   },
 

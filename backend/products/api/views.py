@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample
 from products.models import Product, Category, ProductImage 
-from .serializers import ProductSerializer, CategorySerializer, ProductImageSerializer, ProductListSerializer
+from .serializers import ProductSerializer, CategorySerializer, ProductImageSerializer, ProductListSerializer, ProductCreateUpdateSerializer
 from django.db import transaction
 
 # Custom permission to allow only staff users to create, update, delete
@@ -55,8 +55,10 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Dùng ProductListSerializer cho list, ProductSerializer cho detail"""
-        if self.action == 'list' or self.action == 'search':
+        if self.action in ['list', 'search']:
             return ProductListSerializer
+        if self.action in ['create', 'update', 'partial_update']:
+            return ProductCreateUpdateSerializer
         return ProductSerializer
 
     @action(detail=True, methods=['get'], url_path='images')

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'accounts',
     'orders',
     'products',
+    'notifications',
     # Cloudinary storage
     "cloudinary_storage",
     "cloudinary",
@@ -206,9 +207,4 @@ SPECTACULAR_SETTINGS = {
     
     # Sắp xếp operations theo method
     'SORT_OPERATIONS': True,
-    
-    # Enum naming
-    'ENUM_NAME_OVERRIDES': {
-        'OrderStatusEnum': 'orders.models.Order.status',
-    },
 }

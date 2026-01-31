@@ -25,7 +25,6 @@ export interface LoginRequest {
 export interface LoginResponse {
   user: User;
   access: string;
-  refresh: string;
 }
 
 export interface RegisterRequest {
@@ -40,5 +39,4 @@ export interface RegisterRequest {
 export interface RegisterResponse {
   user: User;
   access: string;
-  refresh: string;
 }

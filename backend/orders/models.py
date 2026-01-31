@@ -4,6 +4,14 @@ from django.conf import settings
 from products.models import Product
 
 
+class OrderStatus(models.TextChoices):
+    PENDING = "pending", "Chờ xử lý"
+    PROCESSING = "processing", "Đang xử lý"
+    SHIPPED = "shipped", "Đã giao"
+    COMPLETED = "completed", "Hoàn thành"
+    CANCELLED = "cancelled", "Đã hủy"
+
+
 class Cart(models.Model):
     # 1 user 1 cart
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -41,14 +49,6 @@ class CartItem(models.Model):
 
 
 class Order(models.Model):
-    STATUS_CHOICES = [
-        ("pending", "Chờ xử lý"),
-        ("processing", "Đang xử lý"),
-        ("shipped", "Đã giao"),
-        ("completed", "Hoàn thành"),
-        ("cancelled", "Đã hủy"),
-    ]
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -58,8 +58,8 @@ class Order(models.Model):
     total_amount = models.DecimalField(max_digits=14, decimal_places=2)
     status = models.CharField(
         max_length=20,
-        choices=STATUS_CHOICES,
-        default="pending",
+        choices=OrderStatus.choices,
+        default=OrderStatus.PENDING,
     )
     shipping_address = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)

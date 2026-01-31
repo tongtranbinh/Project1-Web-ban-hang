@@ -7,6 +7,7 @@ const http = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Interceptor để tự động thêm token vào mỗi request
@@ -34,23 +35,21 @@ http.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
-        if (refreshToken) {
-          const response = await axios.post(`${baseURL}/accounts/token/refresh/`, {
-            refresh: refreshToken,
-          });
+        const response = await axios.post(
+          `${baseURL}/accounts/token/refresh/`,
+          null,
+          { withCredentials: true }
+        );
 
-          const { access } = response.data;
-          localStorage.setItem('access_token', access);
+        const { access } = response.data;
+        localStorage.setItem('access_token', access);
 
-          // Retry request với token mới
-          originalRequest.headers.Authorization = `Bearer ${access}`;
-          return http(originalRequest);
-        }
+        // Retry request với token mới
+        originalRequest.headers.Authorization = `Bearer ${access}`;
+        return http(originalRequest);
       } catch (refreshError) {
         // Refresh token hết hạn, đăng xuất user
         localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
         window.location.href = '/login';
         return Promise.reject(refreshError);

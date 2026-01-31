@@ -9,6 +9,12 @@ export const useCart = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCart = async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      setCart(null);
+      setError(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

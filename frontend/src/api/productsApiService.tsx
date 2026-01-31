@@ -1,6 +1,6 @@
 
 import http from './http';
-import type { Product, Category, CreateProduct } from './models/Product';
+import type { Product, Category, CreateProduct, CreateProductImage } from './models/Product';
 
 export const productsService = {
   // Products
@@ -70,6 +70,16 @@ export const productsService = {
   // Product Images
   getProductImages: async (productId: string) => {
     const response = await http.get(`/products/products/${productId}/images/`);
+    return response.data;
+  },
+
+  createProductImage: async (data: CreateProductImage) => {
+    const formData = new FormData();
+    formData.append('product', data.product);
+    formData.append('image', data.image);
+    const response = await http.post('/products/product-images/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   }
 };

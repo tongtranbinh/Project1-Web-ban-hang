@@ -45,14 +45,14 @@ class CartViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def my_cart(self, request):
         """Lấy giỏ hàng của user hiện tại (tự động tạo nếu chưa có)"""
-        cart, created = Cart.objects.get_or_create(user=request.user)
+        with transaction.atomic():
+            cart, created = Cart.objects.select_for_update().get_or_create(user=request.user)
         serializer = self.get_serializer(cart)
         return Response(serializer.data)
     
     @action(detail=False, methods=['post'])
     def add_item(self, request):
         """Thêm sản phẩm vào giỏ hàng"""
-        cart, created = Cart.objects.get_or_create(user=request.user)
         product_id = request.data.get('product_id')
         quantity = int(request.data.get('quantity', 1))
         
@@ -64,15 +64,19 @@ class CartViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart, 
-            product=product,
-            defaults={'quantity': quantity}
-        )
-        
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
+        with transaction.atomic():
+            cart, created = Cart.objects.select_for_update().get_or_create(user=request.user)
+            product = Product.objects.select_for_update().get(id=product_id)
+            
+            cart_item, created = CartItem.objects.select_for_update().get_or_create(
+                cart=cart, 
+                product=product,
+                defaults={'quantity': quantity}
+            )
+            
+            if not created:
+                cart_item.quantity += quantity
+                cart_item.save()
         
         serializer = CartSerializer(cart)
         return Response(serializer.data)
@@ -80,22 +84,24 @@ class CartViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def update_item(self, request):
         """Cập nhật số lượng sản phẩm trong giỏ"""
-        cart = Cart.objects.get(user=request.user)
         item_id = request.data.get('item_id')
         quantity = int(request.data.get('quantity'))
         
-        try:    
-            cart_item = CartItem.objects.get(id=item_id, cart=cart)
-            if quantity <= 0:
-                cart_item.delete()
-            else:
-                cart_item.quantity = quantity
-                cart_item.save()
-        except CartItem.DoesNotExist:
-            return Response(
-                {'error': 'Không tìm thấy item'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
+        with transaction.atomic():
+            cart = Cart.objects.select_for_update().get(user=request.user)
+            
+            try:    
+                cart_item = CartItem.objects.select_for_update().get(id=item_id, cart=cart)
+                if quantity <= 0:
+                    cart_item.delete()
+                else:
+                    cart_item.quantity = quantity
+                    cart_item.save()
+            except CartItem.DoesNotExist:
+                return Response(
+                    {'error': 'Không tìm thấy item'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
         
         serializer = CartSerializer(cart)
         return Response(serializer.data)
@@ -103,8 +109,9 @@ class CartViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['delete'])
     def clear(self, request):
         """Xóa toàn bộ giỏ hàng"""
-        cart = Cart.objects.get(user=request.user)
-        cart.items.all().delete()
+        with transaction.atomic():
+            cart = Cart.objects.select_for_update().get(user=request.user)
+            cart.items.all().delete()
         return Response({'message': 'Đã xóa giỏ hàng'})
 
 
@@ -136,20 +143,33 @@ class OrderViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         
         with transaction.atomic():
-            cart = Cart.objects.get(user=request.user)
-
-            # Kiểm tra tồn kho trước khi tạo
-            for cart_item in cart.items.select_related('product').all():
-                if cart_item.quantity > cart_item.product.stock:
+            # Lock cart và fetch cart items
+            cart = Cart.objects.select_for_update().get(user=request.user)
+            cart_items = list(cart.items.select_related('product').all())
+            
+            if not cart_items:
+                return Response(
+                    {'error': 'Giỏ hàng trống'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Lock products để tránh race condition
+            product_ids = [item.product_id for item in cart_items]
+            products_lock = {p.id: p for p in Product.objects.select_for_update().filter(id__in=product_ids)}
+            
+            # Kiểm tra tồn kho lại trong transaction (stock có thể đã thay đổi)
+            for cart_item in cart_items:
+                product = products_lock[cart_item.product_id]
+                if cart_item.quantity > product.stock:
                     return Response(
-                        {'error': f'Sản phẩm {cart_item.product.name} không đủ tồn kho'},
+                        {'error': f'Sản phẩm {product.name} không đủ tồn kho (chỉ còn {product.stock})'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             
             # Tính total
             total_amount = sum(
-                item.product.price * item.quantity 
-                for item in cart.items.all()
+                products_lock[item.product_id].price * item.quantity 
+                for item in cart_items
             )
             
             # Tạo order
@@ -160,18 +180,37 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status='pending'
             )
             
-            # Tạo order items từ cart items
-            for cart_item in cart.items.select_related('product').all():
-                OrderItem.objects.create(
-                    order=order,
-                    product=cart_item.product,
-                    quantity=cart_item.quantity,
-                    unit_price=cart_item.product.price
+            # Chuẩn bị dữ liệu cập nhật
+            order_items_to_create = []
+            products_to_update = []
+            
+            for cart_item in cart_items:
+                product = products_lock[cart_item.product_id]
+                
+                # Tạo order item
+                order_items_to_create.append(
+                    OrderItem(
+                        order=order,
+                        product=product,
+                        quantity=cart_item.quantity,
+                        unit_price=product.price
+                    )
                 )
-                # Trừ tồn kho và cộng sold
-                cart_item.product.stock = max(0, cart_item.product.stock - cart_item.quantity)
-                cart_item.product.sold = cart_item.product.sold + cart_item.quantity
-                cart_item.product.save(update_fields=['stock', 'sold'])
+                
+                # Chuẩn bị update product
+                product.stock = max(0, product.stock - cart_item.quantity)
+                product.sold = product.sold + cart_item.quantity
+                products_to_update.append(product)
+            
+            # Bulk create order items
+            OrderItem.objects.bulk_create(order_items_to_create)
+            
+            # Bulk update products (tránh N+1 queries và đảm bảo atomic)
+            Product.objects.bulk_update(
+                products_to_update, 
+                ['stock', 'sold'],
+                batch_size=100
+            )
             
             # Xóa giỏ hàng
             cart.items.all().delete()

@@ -15,6 +15,8 @@ import AdminDashboardPage from "../pages/Admin/AdminDashboardPage";
 import AdminProductsPage from "../pages/Admin/AdminProductsPage";
 import AdminOrdersPage from "../pages/Admin/AdminOrdersPage";
 import AdminUsersPage from "../pages/Admin/AdminUsersPage";
+import UserNotificationsPage from "../pages/Home/UserNotificationsPage";
+import AdminNotificationsPage from "../pages/Admin/AdminNotificationsPage";
 import ProtectedRoute from "../components/ProtectedRoute";
 import AdminRoute from "../components/AdminRoute";
 import Layout from "../components/Layout";
@@ -35,9 +37,13 @@ export default function AppRouter() {
         <Route path="/admin/products" element={<AdminRoute><Layout><AdminProductsPage /></Layout></AdminRoute>} />
         <Route path="/admin/orders" element={<AdminRoute><Layout><AdminOrdersPage /></Layout></AdminRoute>} />
         <Route path="/admin/users" element={<AdminRoute><Layout><AdminUsersPage /></Layout></AdminRoute>} />
+        <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
 
         {/* User Profile - Protected Route */}
         <Route path="/profile" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+
+        {/* Notifications - Protected Routes */}
+        <Route path="/notifications" element={<ProtectedRoute><UserNotificationsPage /></ProtectedRoute>} />
 
         {/* Products Pages */}
         <Route path="/products" element={<ProductsListPage />} />

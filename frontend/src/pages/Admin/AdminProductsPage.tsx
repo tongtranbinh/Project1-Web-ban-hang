@@ -19,6 +19,9 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     category_id: '',
     name: '',
@@ -60,6 +63,9 @@ export default function AdminProductsPage() {
         stock: product.stock,
         is_active: product.is_active,
       });
+      // Hiển thị ảnh cover hiện tại nếu có
+      setImageFiles([]);
+      setImagePreviews(product.cover_image?.image ? [product.cover_image.image] : []);
     } else {
       setEditingId(null);
       setFormData({
@@ -70,6 +76,8 @@ export default function AdminProductsPage() {
         stock: 0,
         is_active: true,
       });
+      setImageFiles([]);
+      setImagePreviews([]);
     }
     setShowModal(true);
   };
@@ -77,6 +85,8 @@ export default function AdminProductsPage() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingId(null);
+    setImageFiles([]);
+    setImagePreviews([]);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -103,6 +113,7 @@ export default function AdminProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return; // tránh double submit
 
     if (!formData.category_id || !formData.name || !formData.price) {
       toast.error('Vui lòng điền đầy đủ thông tin');
@@ -110,11 +121,22 @@ export default function AdminProductsPage() {
     }
 
     try {
+      setSubmitting(true);
       if (editingId) {
         await productsService.updateProduct(editingId, formData);
+        // Upload các ảnh mới nếu có
+        for (const imageFile of imageFiles) {
+          await productsService.createProductImage({ product: editingId, image: imageFile });
+        }
         toast.success('Cập nhật sản phẩm thành công');
       } else {
-        await productsService.createProduct(formData);
+        const created = await productsService.createProduct(formData);
+        // Upload các ảnh sau khi tạo sản phẩm
+        if (created?.id) {
+          for (const imageFile of imageFiles) {
+            await productsService.createProductImage({ product: created.id, image: imageFile });
+          }
+        }
         toast.success('Thêm sản phẩm thành công');
       }
       fetchData();
@@ -122,7 +144,27 @@ export default function AdminProductsPage() {
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Lỗi khi lưu sản phẩm');
       console.error('Error:', error);
+    } finally {
+      setSubmitting(false);
     }
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = Array.from(e.target.files ?? []);
+    setImageFiles((prev) => [...prev, ...newFiles]);
+
+    newFiles.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreviews((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleDelete = async (id: string) => {
@@ -144,9 +186,7 @@ export default function AdminProductsPage() {
       product.category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getCategoryName = (categoryId: string) => {
-    return categories.find((cat) => cat.id === categoryId)?.name || 'N/A';
-  };
+  // Note: hiển thị tên danh mục trực tiếp từ product.category.name
 
   const formatCurrency = (amount: string | number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -278,7 +318,7 @@ export default function AdminProductsPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full">
+          <div className="bg-white rounded-xl shadow-lg max-w-3xl w-full">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-900">
                 {editingId ? 'Sửa Sản Phẩm' : 'Thêm Sản Phẩm'}
@@ -342,6 +382,37 @@ export default function AdminProductsPage() {
                 />
               </div>
 
+              {/* Image */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ảnh sản phẩm
+                </label>
+                {imagePreviews.length > 0 && (
+                  <div className="mb-3 grid grid-cols-4 gap-2">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative">
+                        <img src={preview} alt={`Ảnh ${index + 1}`} className="w-24 h-24 object-cover rounded-md border" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-xs text-gray-500">Chọn một hoặc nhiều ảnh. Click dấu ✕ để xóa ảnh.</p>
+              </div>
+
               {/* Price */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -391,9 +462,10 @@ export default function AdminProductsPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                  disabled={submitting}
+                  className={`flex-1 ${submitting ? 'bg-indigo-400' : 'bg-indigo-600 hover:bg-indigo-700'} text-white font-semibold py-2 px-4 rounded-lg transition-colors`}
                 >
-                  {editingId ? 'Cập Nhật' : 'Thêm'}
+                  {submitting ? 'Đang xử lý...' : (editingId ? 'Cập Nhật' : 'Thêm')}
                 </button>
                 <button
                   type="button"

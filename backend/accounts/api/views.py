@@ -4,9 +4,30 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample
 from accounts.models import User, ShippingAddress
 from .serializers import UserSerializer, ShippingAddressSerializer, RegisterSerializer, LoginSerializer, LogoutSerializer
+
+REFRESH_COOKIE_NAME = "refresh_token"
+
+
+def _set_refresh_cookie(response: Response, refresh: str) -> None:
+	max_age = int(settings.SIMPLE_JWT['REFRESH_TOKEN_LIFETIME'].total_seconds())
+	response.set_cookie(
+		REFRESH_COOKIE_NAME,
+		refresh,
+		max_age=max_age,
+		httponly=True,
+		secure=not settings.DEBUG,
+		samesite='Lax',
+		path='/',
+	)
+
+
+def _clear_refresh_cookie(response: Response) -> None:
+	response.delete_cookie(REFRESH_COOKIE_NAME, path='/')
 
 @extend_schema_view(
 	list=extend_schema(tags=['Users']),
@@ -98,11 +119,12 @@ class RegisterView(APIView):
 		if serializer.is_valid():
 			user = serializer.save()
 			refresh = RefreshToken.for_user(user)
-			return Response({
+			response = Response({
 				'user': UserSerializer(user).data,
-				'refresh': str(refresh),
 				'access': str(refresh.access_token),
 			}, status=status.HTTP_201_CREATED)
+			_set_refresh_cookie(response, str(refresh))
+			return response
 		return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @extend_schema(tags=['Authentication'])
@@ -119,11 +141,12 @@ class LoginView(APIView):
 		if serializer.is_valid():
 			user = serializer.validated_data
 			refresh = RefreshToken.for_user(user)
-			return Response({
+			response = Response({
 				'user': UserSerializer(user).data,
-				'refresh': str(refresh),
 				'access': str(refresh.access_token),
 			}, status=status.HTTP_200_OK)
+			_set_refresh_cookie(response, str(refresh))
+			return response
 		return Response(serializer.errors, status=status.HTTP_401_UNAUTHORIZED)
 
 @extend_schema(tags=['Authentication'])
@@ -136,10 +159,28 @@ class LogoutView(APIView):
 	)
 	def post(self, request):
 		try:
-			refresh_token = request.data.get('refresh')
+			refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
 			if refresh_token:
 				token = RefreshToken(refresh_token)
 				token.blacklist()
-			return Response({"detail": "Logout successful"}, status=status.HTTP_200_OK)
+			response = Response({"detail": "Logout successful"}, status=status.HTTP_200_OK)
+			_clear_refresh_cookie(response)
+			return response
 		except Exception as e:
 			return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema(tags=['Authentication'])
+class CookieTokenRefreshView(TokenRefreshView):
+	def post(self, request, *args, **kwargs):
+		refresh = request.COOKIES.get(REFRESH_COOKIE_NAME)
+		if not refresh:
+			return Response({"detail": "Refresh token not provided"}, status=status.HTTP_401_UNAUTHORIZED)
+
+		serializer = self.get_serializer(data={"refresh": refresh})
+		serializer.is_valid(raise_exception=True)
+		response = Response(serializer.validated_data, status=status.HTTP_200_OK)
+		if 'refresh' in response.data:
+			new_refresh = response.data.pop('refresh')
+			_set_refresh_cookie(response, new_refresh)
+		return response

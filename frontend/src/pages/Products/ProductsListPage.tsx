@@ -12,7 +12,7 @@ export default function ProductsListPage() {
   const { addToCart } = useCart();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tempMinPrice, setTempMinPrice] = useState<number>(0);
-  const [tempMaxPrice, setTempMaxPrice] = useState<number>(5000000);
+  const [tempMaxPrice, setTempMaxPrice] = useState<number>(100000000);
   const [showCategories, setShowCategories] = useState<boolean>(true);
   const [showPriceRange, setShowPriceRange] = useState<boolean>(true);
 
@@ -20,7 +20,7 @@ export default function ProductsListPage() {
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") ?? "");
   const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get("category") ?? "");
   const [minPrice, setMinPrice] = useState(() => Number(searchParams.get("min_price") ?? 0));
-  const [maxPrice, setMaxPrice] = useState(() => Number(searchParams.get("max_price") ?? 5000000));
+  const [maxPrice, setMaxPrice] = useState(() => Number(searchParams.get("max_price") ?? 100000000));
 
 
 
@@ -29,7 +29,7 @@ export default function ProductsListPage() {
     const category = searchParams.get("category") || "";
     const search = searchParams.get("search") || "";
     const min_price = parseInt(searchParams.get("min_price") || "0", 10);
-    const max_price = parseInt(searchParams.get("max_price") || "5000000", 10);
+    const max_price = parseInt(searchParams.get("max_price") || "100000000", 10);
     setSelectedCategory(category);
     setSearchQuery(search);
     setMinPrice(min_price);
@@ -43,7 +43,7 @@ export default function ProductsListPage() {
       category_id: selectedCategory || "",
       search: searchQuery || "",
       min_price: minPrice > 0 ? minPrice : undefined,
-      max_price: maxPrice < 5000000 ? maxPrice : undefined,
+      max_price: maxPrice < 100000000 ? maxPrice : undefined,
     });
   }, [selectedCategory, searchQuery, minPrice, maxPrice]);
 
@@ -53,7 +53,7 @@ export default function ProductsListPage() {
     if (patch.search !== undefined) patch.search ? p.set("search", patch.search) : p.delete("search");
     if (patch.category !== undefined) patch.category ? p.set("category", patch.category) : p.delete("category");
     if (patch.min_price !== undefined) patch.min_price > 0 ? p.set("min_price", String(patch.min_price)) : p.delete("min_price");
-    if (patch.max_price !== undefined) patch.max_price < 5000000 ? p.set("max_price", String(patch.max_price)) : p.delete("max_price");
+    if (patch.max_price !== undefined) patch.max_price < 100000000 ? p.set("max_price", String(patch.max_price)) : p.delete("max_price");
     setSearchParams(p, { replace: true });
   };
 
@@ -76,9 +76,9 @@ export default function ProductsListPage() {
     setSelectedCategory('');
     setSearchQuery('');
     setMinPrice(0);
-    setMaxPrice(5000000);
+    setMaxPrice(100000000);
     setTempMinPrice(0);
-    setTempMaxPrice(5000000);
+    setTempMaxPrice(100000000);
   };
 
   const handleApplyPrice = () => {
@@ -163,7 +163,7 @@ export default function ProductsListPage() {
                           
                           type="range"
                           min="0"
-                          max="5000000"
+                          max="100000000"
                           step="100000"
                           value={tempMinPrice}  
                           onChange={(e) => setTempMinPrice(Number(e.target.value))}
@@ -175,7 +175,7 @@ export default function ProductsListPage() {
                           
                           type="range"
                           min="0"
-                          max="5000000"
+                          max="100000000"
                           step="100000"
                           value={tempMaxPrice}
                           onChange={(e) => setTempMaxPrice(Number(e.target.value))}

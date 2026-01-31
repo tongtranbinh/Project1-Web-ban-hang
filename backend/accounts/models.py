@@ -9,7 +9,7 @@ class User(AbstractUser):
     Bảng user riêng của hệ thống, kế thừa sẵn:
     username, password, email, first_name, last_name, is_staff, is_superuser, ...
     """
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4(), editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     phone_number = models.CharField(max_length=20, blank=True)
     full_name = models.CharField(max_length=150, blank=True)
 
@@ -50,4 +50,4 @@ class ShippingAddress(models.Model):
         ordering = ["-is_default", "-created_at"]
 
     def __str__(self):
-        return f"{self.full_name} - {self.line1}, {self.city}"
+        return f"{self.full_name} - {self.description}, {self.city}"

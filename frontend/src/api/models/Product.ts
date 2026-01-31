@@ -27,10 +27,8 @@ export interface Product {
 }
 
 export interface CreateProductImage {
-  product_id: string;
+  product: string;
   image: File;
-  alt_text: string;
-  display_order: number;
 }
 
 export interface CreateProduct {

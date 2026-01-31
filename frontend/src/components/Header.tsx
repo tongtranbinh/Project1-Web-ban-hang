@@ -7,6 +7,8 @@ import {
   Menu, 
   X,
 } from 'lucide-react';
+import { accountsService } from '../api/accountsApiService';
+
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -23,10 +25,16 @@ export default function Header() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await accountsService.logout();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
   };
 
   return (
@@ -85,6 +93,7 @@ export default function Header() {
 
           {/* Right Icons */}
           <div className="flex items-center space-x-4">
+
 
             {/* Cart */}
             <Link 

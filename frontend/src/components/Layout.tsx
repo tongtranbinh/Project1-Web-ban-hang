@@ -1,12 +1,38 @@
 import type { ReactNode } from 'react';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { notificationService } from '../api/notificationApiService';
 import Header from './Header';
+import NotificationBell from './NotificationBell';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
+  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const isAuthenticated = localStorage.getItem('access_token');
+
+  // Load unread count khi component mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadUnreadCount();
+      // Refresh mỗi 30s khi popup đóng, mỗi 10s khi popup mở
+      const interval = setInterval(loadUnreadCount, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, showNotificationPopup]);
+
+  const loadUnreadCount = async () => {
+    try {
+      const count = await notificationService.getUnreadCount();
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Error loading unread count:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
@@ -14,16 +40,45 @@ export default function Layout({ children }: LayoutProps) {
         {children}
       </main>
 
-      {/* Messenger Floating Button */}
-      <a
-        href="https://www.facebook.com/binh.tongtran.75"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110"
-        aria-label="Chat on Messenger"
-      >
-        <MessageCircle className="w-6 h-6" />
-      </a>
+      {/* Floating Buttons */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+        {/* Notification Floating Button - chỉ hiển thị khi đăng nhập */}
+        {isAuthenticated && (
+          <div className="relative">
+            <button
+              onClick={() => setShowNotificationPopup(!showNotificationPopup)}
+              className="bg-orange-600 text-white p-4 rounded-full shadow-lg hover:bg-orange-700 transition-all hover:scale-110 relative"
+              aria-label="Notifications"
+            >
+              <Bell className="w-6 h-6" />
+              { (unreadCount > 0) && (
+                <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>)}
+            </button>
+            
+            {/* Popup NotificationBell */}
+            {showNotificationPopup && (
+              <div className="absolute bottom-full right-0 mb-3">
+                <div className="bg-white rounded-lg shadow-2xl border border-gray-200 w-96 max-h-[500px] overflow-hidden">
+                  <NotificationBell onClose={() => setShowNotificationPopup(false)} />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Messenger Floating Button */}
+        <a
+          href="https://www.facebook.com/binh.tongtran.75"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-all hover:scale-110"
+          aria-label="Chat on Messenger"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </a>
+      </div>
 
       <footer className="bg-gray-900 text-white py-12 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

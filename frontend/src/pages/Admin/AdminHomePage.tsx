@@ -26,6 +26,12 @@ export default function AdminHomePage() {
       href: '/admin/users',
       color: 'from-green-500 to-teal-500',
     },
+    {
+      title: 'Quản Lý Thông Báo',
+      icon: '🔔',
+      href: '/admin/notifications',
+      color: 'from-yellow-500 to-orange-500',
+    }
 
   ];
 

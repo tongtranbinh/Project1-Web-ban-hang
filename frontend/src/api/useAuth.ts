@@ -21,7 +21,6 @@ export function useLogin() {
 
       // Lưu thông tin vào localStorage
       localStorage.setItem('access_token', response.access);
-      localStorage.setItem('refresh_token', response.refresh);
       localStorage.setItem('user', JSON.stringify(response.user));
 
       toast.success(`Chào mừng ${response.user.username}!`);
@@ -60,7 +59,6 @@ export function useRegister() {
       const response = await accountsService.register(data);
 
       localStorage.setItem('access_token', response.access);
-      localStorage.setItem('refresh_token', response.refresh);
       localStorage.setItem('user', JSON.stringify(response.user));
 
       toast.success('Đăng ký thành công!');
@@ -98,16 +96,11 @@ export function useLogout() {
     
     try {
       setLoading(true);
-      const refreshToken = localStorage.getItem('refresh_token');
-
-      if (refreshToken) {
-        await accountsService.logout(refreshToken);
-      }
+      await accountsService.logout();
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
       localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
       localStorage.removeItem('user');
       
       toast.success('Đã đăng xuất thành công');
